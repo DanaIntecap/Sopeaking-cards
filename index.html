@@ -288,4 +288,286 @@ button{
             </div>
 
             <h3>📝 Descripción de la actividad</h3>
-            <p>Actividad interactiva enfocada en el desarrollo ágil de la flu
+            <p>Actividad interactiva enfocada en el desarrollo ágil de la fluidez verbal. Los estudiantes interactúan con sets dinámicos de preguntas (Speaking Cards) que están estrictamente alineados con las temáticas y puntos gramaticales de su unidad actual en English Journey.</p>
+
+            <h3>🎯 Objetivo de la actividad</h3>
+            <p>Consolidar la fluidez, precisión y confianza en la expresión oral mediante la práctica integral de preguntas abiertas y cerradas, aplicando de forma espontánea las estructuras gramaticales y el vocabulario acumulado a lo largo de las ocho unidades del curso en un tiempo máximo de respuesta de 5 segundos.</p>
+
+            <h3>🛠️ Requisitos y Recursos</h3>
+            <ul>
+                <li>Dispositivo con acceso a internet (para entorno web).</li>
+                <li>Enlace a la herramienta: <a href="#" style="color: #0060AA; font-weight: 500;">[Insertar link de GitHub Pages/Azure]</a></li>
+                <li>Pantalla compartida o proyector (si es presencial/sincrónica).</li>
+                <li>Bocinas o audífonos.</li>
+            </ul>
+
+            <h3>📌 Instrucciones de ejecución</h3>
+            <h4>👨‍🏫 Para el Tutor (Facilitación):</h4>
+            <ul>
+                <li><strong>Filtra tu práctica:</strong> Selecciona tu Nivel, Unidad y el Topic (tema gramatical o comunicativo) en los menús desplegables.</li>
+                <li><strong>Escucha y afina:</strong> Lee la tarjeta y presiona "Listen Question" para validar la entonación y acostumbrar tu oído.</li>
+                <li><strong>Ponte a prueba:</strong> Responde en voz alta de manera natural antes de pedir ayuda a la plataforma.</li>
+                <li><strong>Valida y compara:</strong> Haz clic en "Show Hint" si estás atascado, o en "Show Answer" para comparar la estructura de tu respuesta con el modelo sugerido. ¡Recuerda que el error es parte clave del aprendizaje!</li>
+            </ul>
+
+            <h4>🧑‍🎓 Para el Estudiante:</h4>
+            <ul>
+                <li><strong>Filtra tu práctica:</strong> Selecciona tu Nivel, Unidad y el Topic (tema gramatical o comunicativo) en los menús desplegables.</li>
+                <li><strong>Escucha y afina:</strong> Lee la tarjeta y presiona "Listen Question" para validar la entonación y acostumbrar tu oído.</li>
+                <li><strong>Ponte a prueba:</strong> Responde en voz alta de manera natural antes de pedir ayuda a la plataforma.</li>
+                <li><strong>Valida y compara:</strong> Haz clic en "Show Hint" si estás atascado, o en "Show Answer" para comparar la estructura de tu respuesta con el modelo sugerido. ¡Recuerda que el error es parte clave del aprendizaje!</li>
+            </ul>
+
+            <h3>💡 Sugerencias de implementación</h3>
+            <ul>
+                <li><strong>Presencial:</strong> El tutor proyecta la tarjeta y elige a un estudiante al azar para que responda.</li>
+                <li><strong>Virtual:</strong> Usar la herramienta en salas pequeñas de 2-3 participantes compartiendo pantalla, asignando a un estudiante como el "Host" que hace clic en "New Card".</li>
+                <li><strong>Práctica Autónoma:</strong> Enviar el enlace como tarea de repaso (Warm-up antes de la siguiente clase).</li>
+            </ul>
+        </div>
+    </details>
+
+<div class="filters">
+
+<select id="levelFilter">
+<option value="">All Levels</option>
+</select>
+
+<select id="unitFilter">
+<option value="">All Units</option>
+</select>
+
+<select id="topicFilter">
+<option value="">All Topics</option>
+</select>
+
+</div>
+
+<div>
+
+<label><strong>Speech Speed:</strong></label>
+
+<select id="speechRate">
+<option value="1">1x Normal</option>
+<option value="0.85">0.85x Slow</option>
+</select>
+
+</div>
+
+<button class="btn-primary" onclick="nextCard()">🎲 New Card</button>
+
+<button class="btn-listen" onclick="playQuestion()">🔊 Listen Question</button>
+
+<button class="btn-primary" onclick="toggleHint()">💡 Show Hint</button>
+
+<button class="btn-primary" onclick="toggleAnswer()">✅ Show Answer</button>
+
+<button class="btn-primary" onclick="resetFilters()">🔄 Reset Filters</button>
+
+<div class="card">
+
+<div class="badges">
+
+<span id="levelBadge" class="badge level">
+Level
+</span>
+
+<span id="unitBadge" class="badge unit">
+Unit
+</span>
+
+<span id="topicBadge" class="badge topic">
+Topic
+</span>
+
+</div>
+
+<div id="question" class="question">
+Click New Card to Start
+</div>
+
+<div id="hintBox" class="hint-box hidden"></div>
+
+<div id="answerBox" class="answer-box hidden"></div>
+
+</div>
+
+<div id="counter" class="counter"></div>
+
+</div>
+
+<script>
+
+let allQuestions=[];
+let availableQuestions=[];
+let remainingQuestions=[];
+let currentCard=null;
+
+fetch("questions.json")
+.then(r=>r.json())
+.then(data=>{
+
+allQuestions=data;
+
+loadFilters();
+
+applyFilters();
+
+});
+
+function loadFilters(){
+
+const levels=[...new Set(allQuestions.map(x=>x.Level))];
+const units=[...new Set(allQuestions.map(x=>x.Unit))];
+const topics=[...new Set(allQuestions.map(x=>x.Topic))];
+
+levels.forEach(v=>{
+levelFilter.innerHTML+=`<option value="${v}">${v}</option>`;
+});
+
+units.forEach(v=>{
+unitFilter.innerHTML+=`<option value="${v}">Unit ${v}</option>`;
+});
+
+topics.forEach(v=>{
+topicFilter.innerHTML+=`<option value="${v}">${v}</option>`;
+});
+
+levelFilter.addEventListener("change",applyFilters);
+unitFilter.addEventListener("change",applyFilters);
+topicFilter.addEventListener("change",applyFilters);
+
+}
+
+function applyFilters(){
+
+availableQuestions=allQuestions.filter(q=>
+
+(!levelFilter.value || q.Level===levelFilter.value) &&
+(!unitFilter.value || String(q.Unit)===unitFilter.value) &&
+(!topicFilter.value || q.Topic===topicFilter.value)
+
+);
+
+remainingQuestions=[...availableQuestions];
+
+updateCounter();
+
+}
+
+function nextCard(){
+
+if(remainingQuestions.length===0){
+
+remainingQuestions=[...availableQuestions];
+
+}
+
+if(remainingQuestions.length===0){
+
+question.innerHTML=
+"No questions match selected filters.";
+
+return;
+
+}
+
+const index=
+Math.floor(Math.random()*remainingQuestions.length);
+
+currentCard=
+remainingQuestions[index];
+
+remainingQuestions.splice(index,1);
+
+question.innerHTML=
+currentCard.Question;
+
+levelBadge.innerHTML=
+currentCard.Level;
+
+unitBadge.innerHTML=
+"Unit "+currentCard.Unit;
+
+topicBadge.innerHTML=
+currentCard.Topic;
+
+hintBox.classList.add("hidden");
+answerBox.classList.add("hidden");
+
+updateCounter();
+
+}
+
+function toggleHint(){
+
+if(!currentCard)return;
+
+hintBox.innerHTML=
+currentCard.Hint
+? "<strong>Hint:</strong><br><br>"+currentCard.Hint
+: "<strong>No hint available.</strong>";
+
+hintBox.classList.toggle("hidden");
+
+}
+
+function toggleAnswer(){
+
+if(!currentCard)return;
+
+answerBox.innerHTML=
+currentCard.Answer
+? "<strong>Sample Answer:</strong><br><br>"+currentCard.Answer
+: "<strong>No sample answer available.</strong>";
+
+answerBox.classList.toggle("hidden");
+
+}
+
+function playQuestion(){
+
+if(!currentCard)return;
+
+speechSynthesis.cancel();
+
+const msg=
+new SpeechSynthesisUtterance(
+currentCard.Question
+);
+
+msg.lang="en-US";
+
+msg.rate=
+Number(
+speechRate.value
+);
+
+speechSynthesis.speak(msg);
+
+}
+
+function resetFilters(){
+
+levelFilter.value="";
+unitFilter.value="";
+topicFilter.value="";
+
+applyFilters();
+
+}
+
+function updateCounter(){
+
+counter.innerHTML=
+"Filtered Questions: "+
+availableQuestions.length+
+"<br><br>Cards Remaining: "+
+remainingQuestions.length;
+
+}
+
+</script>
+
+</body>
+</html>
